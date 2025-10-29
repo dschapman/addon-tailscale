@@ -33,7 +33,7 @@ bashio::config "addon_services" | jq -c '.[]' | while read -r service; do
     
     if [ "$funnel" = "true" ]; then
         bashio::log.debug "Executing: tailscale serve funnel tcp:443/$service_name $target_url"
-        if tailscale serve funnel "tcp:443/$service_name" "$target_url"; then
+        if tailscale serve funnel "svc:$service_name" "$target_url"; then
             bashio::log.info "Successfully set up funnel for $service_name"
         else
             local exit_code=$?
