@@ -21,7 +21,8 @@ bashio::config "addon_services" | jq -c '.[]' | while read -r service; do
     funnel=$(echo "$service" | jq -r '.funnel // false')
     
     if [ -z "$port" ] || [ -z "$service_name" ]; then
-        bashio::log.warning "Skipping invalid service config: $service"
+        bashio::log.error "Invalid service config - port: '$port', service_name: '$service_name'"
+        bashio::log.error "Full config: $service"
         continue
     fi
     
@@ -31,16 +32,20 @@ bashio::config "addon_services" | jq -c '.[]' | while read -r service; do
     bashio::log.info "Registering service: $service_name (target: $target_url, funnel: $funnel)"
     
     if [ "$funnel" = "true" ]; then
+        bashio::log.debug "Executing: tailscale serve funnel tcp:443/$service_name $target_url"
         if tailscale serve funnel "tcp:443/$service_name" "$target_url"; then
             bashio::log.info "Successfully set up funnel for $service_name"
         else
-            bashio::log.warning "Failed to set up funnel for $service_name"
+            local exit_code=$?
+            bashio::log.error "Failed to set up funnel for $service_name (exit code: $exit_code)"
         fi
     else
-        if tailscale serve "tcp:$service_name" "$target_url"; then
+        bashio::log.debug "Executing: tailscale serve svc:$service_name $target_url"
+        if tailscale serve "svc:$service_name" "$target_url"; then
             bashio::log.info "Successfully set up serve for $service_name"
         else
-            bashio::log.warning "Failed to set up serve for $service_name"
+            local exit_code=$?
+            bashio::log.error "Failed to set up serve for $service_name (exit code: $exit_code)"
         fi
     fi
 done
