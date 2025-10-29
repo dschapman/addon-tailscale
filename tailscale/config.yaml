@@ -3,7 +3,7 @@ name: Tailscale
 version: dev
 slug: tailscale
 description: Zero config VPN for building secure networks
-url: https://github.com/hassio-addons/addon-tailscale
+url: https://github.com/dschapman/addon-tailscale
 ingress: true
 ingress_port: 0
 ingress_stream: true
@@ -37,9 +37,9 @@ schema:
   log_level: list(trace|debug|info|notice|warning|error|fatal)?
   login_server: url?
   share_homeassistant: list(disabled|serve|funnel)?
-  addon_services:
+  addon_services?:
     - port: int
-      name: str
+      service_name: str
       host: str?
       funnel: bool?
   share_on_port: match(^(443|8443|10000)$)?

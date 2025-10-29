@@ -32,11 +32,11 @@ jq -r '.addon_services[]? | @base64' "$CONFIG_PATH" | while read service_b64; do
     service=$(echo "$service_b64" | base64 -d)
     
     port=$(echo "$service" | jq -r '.port')
-    name=$(echo "$service" | jq -r '.name')
+    service_name=$(echo "$service" | jq -r '.service_name')
     host=$(echo "$service" | jq -r '.host // "localhost"')
     funnel=$(echo "$service" | jq -r '.funnel // false')
     
-    if [ -z "$port" ] || [ -z "$name" ]; then
+    if [ -z "$port" ] || [ -z "$service_name" ]; then
         echo "Skipping invalid service config: $service"
         continue
     fi
@@ -44,16 +44,16 @@ jq -r '.addon_services[]? | @base64' "$CONFIG_PATH" | while read service_b64; do
     # Build the target URL
     target_url="http://$host:$port"
     
-    echo "Registering service: $name (target: $target_url, funnel: $funnel)"
+    echo "Registering service: $service_name (target: $target_url, funnel: $funnel)"
     
     if [ "$funnel" = "true" ]; then
-        echo "Setting up funnel for $name"
-        tailscale serve funnel "tcp:443/$name" "$target_url" || \
-            echo "Warning: Failed to set up funnel for $name"
+        echo "Setting up funnel for $service_name"
+        tailscale serve funnel "tcp:443/$service_name" "$target_url" || \
+            echo "Warning: Failed to set up funnel for $service_name"
     else
-        echo "Setting up serve for $name"
-        tailscale serve "tcp:$name" "$target_url" || \
-            echo "Warning: Failed to set up serve for $name"
+        echo "Setting up serve for $service_name"
+        tailscale serve "tcp:$service_name" "$target_url" || \
+            echo "Warning: Failed to set up serve for $service_name"
     fi
 done
 
