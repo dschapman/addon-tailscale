@@ -38,6 +38,11 @@ schema:
   log_level: list(trace|debug|info|notice|warning|error|fatal)?
   login_server: url?
   share_homeassistant: list(disabled|serve|funnel)?
+  addon_services:
+    - port: int
+      name: str
+      host: str?
+      funnel: bool?
   share_on_port: match(^(443|8443|10000)$)?
   snat_subnet_routes: bool?
   stateful_filtering: bool?
