@@ -14,7 +14,7 @@ fi
 bashio::log.info "Setting up addon services..."
 
 # Iterate through each addon service
-bashio::config.get "addon_services" | while read -r service; do
+bashio::config "addon_services" | while read -r service; do
     port=$(echo "$service" | jq -r '.port // empty')
     service_name=$(echo "$service" | jq -r '.service_name // empty')
     host=$(echo "$service" | jq -r '.host // "localhost"')
