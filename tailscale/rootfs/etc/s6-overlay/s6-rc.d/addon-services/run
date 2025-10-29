@@ -5,4 +5,45 @@
 # Configures and registers addon services with Tailscale
 # ==============================================================================
 
-exec /app/scripts/setup-addon-services.sh
+if ! bashio::config.has_value "addon_services"; then
+    bashio::log.info "No addon services configured"
+    touch /run/addon_services_ready
+    exit 0
+fi
+
+bashio::log.info "Setting up addon services..."
+
+# Iterate through each addon service
+bashio::config.get "addon_services" | while read -r service; do
+    port=$(echo "$service" | jq -r '.port // empty')
+    service_name=$(echo "$service" | jq -r '.service_name // empty')
+    host=$(echo "$service" | jq -r '.host // "localhost"')
+    funnel=$(echo "$service" | jq -r '.funnel // false')
+    
+    if [ -z "$port" ] || [ -z "$service_name" ]; then
+        bashio::log.warning "Skipping invalid service config: $service"
+        continue
+    fi
+    
+    # Build the target URL
+    target_url="http://$host:$port"
+    
+    bashio::log.info "Registering service: $service_name (target: $target_url, funnel: $funnel)"
+    
+    if [ "$funnel" = "true" ]; then
+        if tailscale serve funnel "tcp:443/$service_name" "$target_url"; then
+            bashio::log.info "Successfully set up funnel for $service_name"
+        else
+            bashio::log.warning "Failed to set up funnel for $service_name"
+        fi
+    else
+        if tailscale serve "tcp:$service_name" "$target_url"; then
+            bashio::log.info "Successfully set up serve for $service_name"
+        else
+            bashio::log.warning "Failed to set up serve for $service_name"
+        fi
+    fi
+done
+
+bashio::log.info "Addon services setup complete"
+touch /run/addon_services_ready
