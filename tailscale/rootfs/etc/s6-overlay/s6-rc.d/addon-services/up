@@ -1,2 +1,1 @@
-#!/command/execlineb -P
-s6-test -f /run/addon_services_ready
+/etc/s6-overlay/s6-rc.d/addon-services/run
